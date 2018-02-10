@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Substance Workflow",
     "author": "Rommany Allen",
-    "version": (0, 1),
+    "version": (1, 0),
     "blender": (2, 70, 0),
     "location": "View3D > Object > ",
     "description": "Substance Designer worlkflows",
@@ -58,7 +58,16 @@ class Substance(object):
     def __init__(self, *args, **kwargs):
         
         
-
+        # self.context = context.Context()
+        # self.name = re.sub('blend','sbs', basename(bpy.data.filepath))
+        # self.aDestFileAbsPath = bpy.path.abspath("//"+self.name)
+        # self.sbsDoc = sbsgenerator.createSBSDocument(aContext,
+        #                                              aFileAbsPath = aDestFileAbsPath,
+        #                                              aGraphIdentifier = 'SimpleMaterial')
+        # 
+        # self.startPos = [48, 48, 0]
+        # self.xOffset  = [192, 0, 0]
+        # self.yOffset  = [0, 192, 0]
         
         self.materials = []
         for obj in bpy.data.objects:
@@ -402,7 +411,15 @@ def createSubstance():
         raise error
 
 
+#bpy.ops.export_scene.fbx(filepath = yourpath, use_selection = True)
 
+scn = None
+
+
+
+
+
+### sbsbaker options
 sbsbaker_global_options = OrderedDict()
 
 sbsbaker_global_options['input-selection'] = bpy.props.StringProperty(
@@ -677,7 +694,478 @@ sbsbaker_global_options['direction-file'] = StringProperty(
     description="Input texture file giving a direction per pixel to be translated from world space coordinates to texture space coordinates..",
     maxlen= 1024, default= "")
 
+## OLD
+    
+    #sbsbaker_global_options['relative-to-bbox'] = BoolProperty(name="relative-to-bbox", description="Interpret the max distances as a factor of the mesh bounding box.", default=True)
 
+        
+
+class ExportSelectAsFbxOperator(bpy.types.Operator):
+    """ToolTip of UnityWorkflowOperator"""
+    bl_idname = "addongen.exort_selected_as_fbx_operator"
+    bl_label = "Export Selected"
+    bl_options = {'REGISTER'}
+
+
+    #@classmethod
+    #def poll(cls, context):
+    #    return context.object is not None
+    
+    def execute(self, context):
+       
+        fbxPath = re.sub('\.blend', '_'+bpy.context.selected_objects[0].name+'.fbx',bpy.data.filepath )
+        bpy.ops.export_scene.fbx(filepath = fbxPath, axis_up='Z', use_selection = True)
+        
+        self.report({'INFO'}, "Exported Selected")
+        return {'FINISHED'}
+    
+    #def invoke(self, context, event):
+    #    wm.modal_handler_add(self)
+    #    return {'RUNNING_MODAL'}  
+    #    return wm.invoke_porps_dialog(self)
+    #def modal(self, context, event):
+    #def draw(self, context):
+
+class UnityWorkflowOperator(bpy.types.Operator):
+    """ToolTip of UnityWorkflowOperator"""
+    bl_idname = "addongen.unity_workflow_operator"
+    bl_label = "Unity Workflow Operator"
+    bl_options = {'REGISTER'}
+
+
+    #@classmethod
+    #def poll(cls, context):
+    #    return context.object is not None
+    
+    def execute(self, context):
+        getObjects()
+        
+        substance = Substance()
+        for mat in substance.materials:
+            print (mat.name)
+            for im in mat.images:
+                print (im.filepath)
+        
+        self.report({'INFO'}, "Unity Workflow")
+        return {'FINISHED'}
+    
+    #def invoke(self, context, event):
+    #    wm.modal_handler_add(self)
+    #    return {'RUNNING_MODAL'}  
+    #    return wm.invoke_porps_dialog(self)
+    #def modal(self, context, event):
+    #def draw(self, context):
+
+class ZBrushWorkflowOperator(bpy.types.Operator):
+    """ToolTip of ZBrushWorkflowOperator"""
+    bl_idname = "addongen.zbrush_workflow_operator"
+    bl_label = "ZBrush Workflow Operator"
+    bl_options = {'REGISTER'}
+
+
+    #@classmethod
+    #def poll(cls, context):
+    #    return context.object is not None
+    
+    def execute(self, context):
+        getTextures()
+        #getMaterials()
+        
+        self.report({'INFO'}, "Zbrush Workflow")
+        return {'FINISHED'}
+    
+    #def invoke(self, context, event):
+    #    wm.modal_handler_add(self)
+    #    return {'RUNNING_MODAL'}  
+    #    return wm.invoke_porps_dialog(self)
+    #def modal(self, context, event):
+    #def draw(self, context):
+    
+class SubstanceWorkflowOperator(bpy.types.Operator):
+    """ToolTip of SubstanceWorkflowOperator"""
+    bl_idname = "addongen.substance_workflow_operator"
+    bl_label = "Substance Workflow Operator"
+    bl_options = {'REGISTER'}
+
+
+    #@classmethod
+    #def poll(cls, context):
+    #    return context.object is not None
+    
+    def execute(self, context):
+        #createSubstance()
+        updateTextureNodes();
+        #print ( json.dumps(getSubstancePainterTextures(), indent=2))
+        self.report({'INFO'}, "Creating Substance")
+        return {'FINISHED'}
+    
+    #def invoke(self, context, event):
+    #    wm.modal_handler_add(self)
+    #    return {'RUNNING_MODAL'}  
+    #    return wm.invoke_porps_dialog(self)
+    #def modal(self, context, event):
+    #def draw(self, context):
+
+class SubstanceWorkflowPanel(bpy.types.Panel):
+    """Docstring of SubstanceWorkflowPanel"""
+    bl_idname = "VIEW3D_PT_substance_workflow"
+    bl_label = "Workflow"
+    
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = 'Tools'
+    
+    #Panels in ImageEditor are using .poll() instead of bl_context.
+    #@classmethod
+    #def poll(cls, context):
+    #    return context.space_data.show_paint
+    
+    def draw(self, context):
+        layout = self.layout
+        
+        box = layout.box()
+        # row = box.row()
+        # row.operator(SubstanceWorkflowOperator.bl_idname, text = "Create SBS", icon_value=custom_icons["substance_designer"].icon_id)
+        # 
+        # row.operator(ZBrushWorkflowOperator.bl_idname, text = "ZBrush Workflow", icon_value=custom_icons["zbrush"].icon_id)
+        # row.operator(UnityWorkflowOperator.bl_idname, text = "Unity Workflow", icon_value=custom_icons["unity"].icon_id)
+        # row.operator(ExportSelectAsFbxOperator.bl_idname, text = "Export Selected", icon_value=custom_icons["unity"].icon_id)
+        # 
+        
+        scene = context.scene
+        mytool = scene.sbsbaker_InputAndOutput_options
+        
+        ao_opts = scene.sbsbaker_AmbientOcclusion_options
+        
+        
+        
+        #row = box.row()
+        #box.prop(mytool, "workflow_context", text="Context")
+        
+        # box.prop(mytool, "ambient_occlusion", text="ambient_occlusion")
+        # box.prop(mytool, "ambient_occlusion_from_mesh", text="ambient_occlusion_from_mesh")
+        # box.prop(mytool, "bent_normal_from_mesh", text="bent_normal_from_mesh")
+        # box.prop(mytool, "color_from_mesh", text="color_from_mesh")
+        # box.prop(mytool, "curvature", text="curvature")
+        # box.prop(mytool, "curvature_from_mesh", text="curvature_from_mesh")
+        # box.prop(mytool, "height_from_mesh", text="height_from_mesh")
+        # box.prop(mytool, "normal_from_mesh", text="normal_from_mesh")
+        # box.prop(mytool, "normal_world_space", text="normal_world_space")
+        # box.prop(mytool, "opacity_mask_from_mesh", text="opacity_mask_from_mesh")
+        # box.prop(mytool, "position", text="position")
+        # box.prop(mytool, "position_from_mesh", text="position_from_mesh")
+        # box.prop(mytool, "texture_from_mesh", text="texture_from_mesh")
+        # box.prop(mytool, "thickness_from_mesh", text="thickness_from_mesh")
+        # box.prop(mytool, "uv_map", text="uv_map")
+        # box.prop(mytool, "world_space_direction", text="world_space_direction")
+        
+        box.prop(mytool, "input_selection", text="input_selection")
+        box.prop(mytool, "inputs", text="inputs")
+        box.prop(mytool, "name_suffix_high", text="name_suffix_high")
+        box.prop(mytool, "name_suffix_low", text="name_suffix_low")
+        box.prop(mytool, "output_format", text="output_format")
+        box.prop(mytool, "output_format_compression", text="output_format_compression")
+        box.prop(mytool, "output_name", text="output_name")
+        box.prop(mytool, "per_fragment_binormal", text="per_fragment_binormal")
+        box.prop(mytool, "recompute_tangents", text="recompute_tangents")
+        box.prop(mytool, "tangent_space_plugin", text="tangent_space_plugin")
+        
+        
+        box.prop(ao_opts, "apply_diffusion", text="apply_diffusion")
+        box.prop(ao_opts, "details", text="details")
+        box.prop(ao_opts, "dilation_width", text="dilation_width")
+        box.prop(ao_opts, "normal", text="normal")
+        box.prop(ao_opts, "normal_format", text="normal_format")
+        box.prop(ao_opts, "normal_invert", text="normal_invert")
+        box.prop(ao_opts, "normal_world_space", text="normal_world_space")
+        box.prop(ao_opts, "output_size", text="output_size")
+        box.prop(ao_opts, "quality", text="quality")
+        box.prop(ao_opts, "spread", text="spread")
+        box.prop(ao_opts, "udim", text="udim")
+        box.prop(ao_opts, "use_neighbors", text="use_neighbors")
+
+
+    
+    
+    
+    
+    
+    
+    
+
+
+class SubstanceWorkflowMenu(bpy.types.Menu):
+    bl_idname = "VIEW3D_MT_substance_workflow"
+    bl_label = "Substance Workflow Menu"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator(SubstanceWorkflowOperator.bl_idname)
+        layout.separator()
+        layout.menu("VIEW3D_MT_transform")
+        layout.operator_menu_enum("object.select_by_type", "type", text="Select All by Type...")
+
+
+
+############
+
+class sbsbaker_InputAndOutputOptions(bpy.types.PropertyGroup):
+    input_selection = StringProperty(name="input-selection", description='''Select a submesh/subgroup of a mesh.
+Mesh subpart selection can be specified using this syntax for <arg>: <nodeName>@<materialId> where the additional
+@<materialId> is optional. If no material id is specified, all the ids will be used for the process.
+<nodeName> can either be the name of a mesh part or of a transform group. In this case, all the mesh parts parented
+directly or inderectly to this node will be used for the process''', maxlen= 1024, default= "")
+    
+    inputs = StringProperty(name="inputs", description='''Mesh files to process.
+This option is implicit, so you can just provide a list of files at the end of your arguments, they will be interpreted
+as inputs.''', maxlen= 1024, default= "")
+    
+    name_suffix_high = StringProperty(name="name-suffix-high ", description="High Poly name suffix.", maxlen= 1024, default= "_high")
+    name_suffix_low = StringProperty(name="name-suffix-low ", description="Low Poly name suffix.", maxlen= 1024, default= "_low")
+    
+    output_format = EnumProperty(items = [
+        ('bmp', 'bmp', 'bmp'),
+        ('dds', 'dds', 'dds'),
+        ('bmp', 'bmp', 'bmp'),
+        ('ico', 'ico', 'ico'),
+        ('jpg', 'jpg', 'jpg'),
+        ('jif', 'jif', 'jif'),
+        ('jpeg', 'jpeg', 'jpeg'),
+        ('jpe', 'jpe', 'jpe'),
+        ('png', 'png', 'png'),
+        ('tga', 'tga', 'tga'),
+        ('targa', 'targa', 'targa'),
+        ('tif', 'tif', 'tif'),
+        ('tiff', 'tiff', 'tiff'),
+        ('wap', 'wap', 'wap'),
+        ('wbmp', 'wbmp', 'wbmp'),
+        ('wbm', 'wbm', 'wbm'),
+        ('hdr', 'hdr', 'hdr'),
+        ('exr', 'exr', 'exr'),
+        ('jp2', 'jp2', 'jp2'),
+        ('webp', 'webp', 'webp'),
+        ('jxr', 'jxr', 'jxr'),
+        ('wdp', 'wdp', 'wdp'),
+        ('hdp', 'hdp', 'hdp'),
+        ('psd', 'psd', 'psd')],
+                                 name="output-format",
+                                 description="Format to use for output image file.",
+                                 default="png")
+    
+    output_format_compression  = EnumProperty(items = [
+        ('raw', 'raw', 'raw'),
+        ('dxt1', 'dxt1', 'dxt1'),
+        ('dxt2', 'dxt2', 'dxt2'),
+        ('dxt3', 'dxt3', 'dxt3'),
+        ('dxt4', 'dxt4', 'dxt4'),
+        ('dxt5', 'dxt5', 'dxt5'),
+        ('ati1', 'ati1', 'ati1'),
+        ('ati2', 'ati2', 'ati2')],
+                                 name="output-format-compression",
+                                 description="Dds compression to use for output image.",
+                                 default="raw")
+
+    output_name = StringProperty(name="output-name ", description='''Set the output name of the generated files, without the extension."The name is "{inputName}_{bakerName}" by default.
+You can use the following patterns that will be replaced by the program when saving the result of the process:
+- {inputName}. Replaced by the input name.
+- {bakerName}. Replaced by the baker name.''', maxlen= 1024, default= "{inputName}_{bakerName}")
+
+
+    per_fragment_binormal = BoolProperty(name="per-fragment-binormal", description=''' Controls whether the binormal of the tangent frame has to be computed in the fragment shader (true) or in the vertex shader (false).
+- Set by default to 'false' for unitytspace tangent space plugin.
+- Set by default to 'false' for mikktspace tangent space plugin.
+- Set by default to 'true' otherwise.''', default=False)
+    
+    recompute_tangents = BoolProperty(
+        name="recompute-tangents",
+        description="Force to recompute tangents; do not load tangents from the mesh if available.",
+        default=False)
+    
+    tangent_space_plugin = StringProperty(
+        name="tangent-space-plugin",
+        description='Set the plugin file used to compute the meshes tangent space frames.',
+        maxlen= 1024,
+        default= "/Applications/Substance Automation/plugins/tangentspace/libmikktspace.dylib")
+
+class sbsbaker_AmbientOcclusionOptions(bpy.types.PropertyGroup):
+    apply_diffusion = BoolProperty(name="apply-diffusion", description="Whether to use diffusion as a post-process after dilation, or not..", default=True)
+    details = FloatProperty(name="details", description="A lower value will be more precise but will easilly produce artefacts.", default=0.6)
+    dilation_width = IntProperty(name="dilation-width", description="Width of the dilation post-process (in pixels) applied before diffusion.", default=1)
+    normal = StringProperty(name="normal", description="External normal map from file", maxlen= 1024, default= "")
+    
+    normal_format =  EnumProperty(items = [('0', 'OpenGL', 'enum prop 1'), ('1', 'DirectX', 'enum prop 2') ],
+                                name="normal-format",
+                                description="Invert green component in normal map depending on selected format.",
+                                default="1")
+    
+    normal_invert = BoolProperty(name="normal-invert", description="Invert the normals.", default=False)
+    normal_world_space = BoolProperty(name="normal-world-space", description="Tell if the normal map is in world space.", default=False)
+
+    output_size = EnumProperty(items = [
+        ('0', '512 x 512', 'enum prop 1'),
+        ('1', '1024 x 1024', 'enum prop 2'),
+        ('2', '2048 x 2048', 'enum prop 2'),
+        ('3', '4096 x 4096', 'enum prop 2')],
+                                name="output-size", description="output size of the map", default="1")
+    
+    quality = EnumProperty(items = [
+        ('0', 'Low', 'enum prop 1'),
+        ('1', 'Medium', 'enum prop 2'),
+        ('2', 'High', 'enum prop 2'),
+        ('3', 'Very High', 'enum prop 2')],
+                                name="quality", description="Quality of the ambient occlusion. A higher quality is slower.", default="1")
+    
+
+    spread = FloatProperty(name="spread", description="Spread of the ambient occlusion.", default=0.01)
+
+    udim = StringProperty(name="udim", description="ID of the udim tile to bake. Only accepts MARI notation for now.", maxlen= 1024, default= "")
+    
+    use_neighbors = BoolProperty(name="use-neighbors", description="Use unselected mesh parts to compute the ambient occlusion.", default=False)
+
+
+    uv_set = EnumProperty(items = [
+        ('0', 'UV 0', 'enum prop 1'),
+        ('1', 'UV 1', 'enum prop 2'),
+        ('2', 'UV 2', 'enum prop 2'),
+        ('3', 'UV 3', 'enum prop 2'),
+        ('4', 'UV 4', 'enum prop 2'),
+        ('5', 'UV 5', 'enum prop 2'),
+        ('6', 'UV 6', 'enum prop 2'),
+        ('7', 'UV 7', 'enum prop 2')
+        ], name="uv-set", description="Select UV set used to bake meshes information.", default="1")
+
+
+
+
+#########
+class SubstanceWorkflowProps(bpy.types.PropertyGroup):
+    my_bool =     BoolProperty(name="", description="", default=False)
+    
+    
+    bakeNormalFromMesh =     BoolProperty(name="", description="", default=False)
+    bakeAOFromMesh =     BoolProperty(name="", description="", default=False)
+    
+    
+    ambient_occlusion = BoolProperty(name="", description="", default=False)
+    ambient_occlusion_from_mesh = BoolProperty(name="", description="", default=False)
+    bent_normal_from_mesh = BoolProperty(name="", description="", default=False)
+    color_from_mesh = BoolProperty(name="", description="", default=False)
+    curvature = BoolProperty(name="", description="", default=False)
+    curvature_from_mesh = BoolProperty(name="", description="", default=False)
+    height_from_mesh = BoolProperty(name="", description="", default=False)
+    normal_from_mesh = BoolProperty(name="", description="", default=False)
+    normal_world_space = BoolProperty(name="", description="", default=False)
+    opacity_mask_from_mesh = BoolProperty(name="", description="", default=False)
+    position = BoolProperty(name="", description="", default=False)
+    position_from_mesh = BoolProperty(name="", description="", default=False)
+    texture_from_mesh = BoolProperty(name="", description="", default=False)
+    thickness_from_mesh = BoolProperty(name="", description="", default=False)
+    uv_map = BoolProperty(name="", description="", default=False)
+    world_space_direction = BoolProperty(name="", description="", default=False)
+    
+    
+    my_boolVec =  BoolVectorProperty(name="", description="", default=(False, False, False))
+    my_float =    FloatProperty(name="", description="", default=0.0)
+    my_floatVec = FloatVectorProperty(name="", description="", default=(0.0, 0.0, 0.0)) 
+    my_int =      IntProperty(name="", description="", default=0)  
+    my_intVec =   IntVectorProperty(name="", description="", default=(0, 0, 0))
+    my_string =   StringProperty(name="String Value", description="", default="", maxlen=0)
+    workflow_context =  EnumProperty(items = [('ENUM1', 'Model', 'enum prop 1'),
+        ('ENUM2', 'Surface', 'enum prop 2'),
+        ('ENUM3', 'Animation', 'enum prop 2')
+        ],
+                                    name="Workflow Context",
+                                    description="",
+                                    default="ENUM1")
+
+
+class SbsBakerIOOperator(bpy.types.Operator):
+    bl_idname = "sbsbaker.io"  
+    bl_label = "sbsbaker io"  
+    bl_options = {"REGISTER", "UNDO"}
+    
+    input_selection = bpy.props.StringProperty(name="input-selection", description='''Select a submesh/subgroup of a mesh.
+Mesh subpart selection can be specified using this syntax for <arg>: <nodeName>@<materialId> where the additional
+@<materialId> is optional. If no material id is specified, all the ids will be used for the process.
+<nodeName> can either be the name of a mesh part or of a transform group. In this case, all the mesh parts parented
+directly or inderectly to this node will be used for the process''', maxlen= 1024, default= "")
+    
+    inputs = bpy.props.StringProperty(name="inputs", description='''Mesh files to process.
+This option is implicit, so you can just provide a list of files at the end of your arguments, they will be interpreted
+as inputs.''', maxlen= 1024, default= "")
+    
+    name_suffix_high = bpy.props.StringProperty(name="name-suffix-high ", description="High Poly name suffix.", maxlen= 1024, default= "_high")
+    name_suffix_low = bpy.props.StringProperty(name="name-suffix-low ", description="Low Poly name suffix.", maxlen= 1024, default= "_low")
+    
+    output_format = bpy.props.EnumProperty(items = [
+        ('bmp', 'bmp', 'bmp'),
+        ('dds', 'dds', 'dds'),
+        ('bmp', 'bmp', 'bmp'),
+        ('ico', 'ico', 'ico'),
+        ('jpg', 'jpg', 'jpg'),
+        ('jif', 'jif', 'jif'),
+        ('jpeg', 'jpeg', 'jpeg'),
+        ('jpe', 'jpe', 'jpe'),
+        ('png', 'png', 'png'),
+        ('tga', 'tga', 'tga'),
+        ('targa', 'targa', 'targa'),
+        ('tif', 'tif', 'tif'),
+        ('tiff', 'tiff', 'tiff'),
+        ('wap', 'wap', 'wap'),
+        ('wbmp', 'wbmp', 'wbmp'),
+        ('wbm', 'wbm', 'wbm'),
+        ('hdr', 'hdr', 'hdr'),
+        ('exr', 'exr', 'exr'),
+        ('jp2', 'jp2', 'jp2'),
+        ('webp', 'webp', 'webp'),
+        ('jxr', 'jxr', 'jxr'),
+        ('wdp', 'wdp', 'wdp'),
+        ('hdp', 'hdp', 'hdp'),
+        ('psd', 'psd', 'psd')],
+                                 name="output-format",
+                                 description="Format to use for output image file.",
+                                 default="png")
+    
+    output_format_compression  = bpy.props.EnumProperty(items = [
+        ('raw', 'raw', 'raw'),
+        ('dxt1', 'dxt1', 'dxt1'),
+        ('dxt2', 'dxt2', 'dxt2'),
+        ('dxt3', 'dxt3', 'dxt3'),
+        ('dxt4', 'dxt4', 'dxt4'),
+        ('dxt5', 'dxt5', 'dxt5'),
+        ('ati1', 'ati1', 'ati1'),
+        ('ati2', 'ati2', 'ati2')],
+                                 name="output-format-compression",
+                                 description="Dds compression to use for output image.",
+                                 default="raw")
+
+    output_name = bpy.props.StringProperty(name="output-name ", description='''Set the output name of the generated files, without the extension."The name is "{inputName}_{bakerName}" by default.
+You can use the following patterns that will be replaced by the program when saving the result of the process:
+- {inputName}. Replaced by the input name.
+- {bakerName}. Replaced by the baker name.''', maxlen= 1024, default= "{inputName}_{bakerName}")
+
+
+    per_fragment_binormal = bpy.props.BoolProperty(name="per-fragment-binormal", description=''' Controls whether the binormal of the tangent frame has to be computed in the fragment shader (true) or in the vertex shader (false).
+- Set by default to 'false' for unitytspace tangent space plugin.
+- Set by default to 'false' for mikktspace tangent space plugin.
+- Set by default to 'true' otherwise.''', default=False)
+    
+    recompute_tangents = bpy.props.BoolProperty(
+        name="recompute-tangents",
+        description="Force to recompute tangents; do not load tangents from the mesh if available.",
+        default=False)
+    
+    tangent_space_plugin = bpy.props.StringProperty(
+        name="tangent-space-plugin",
+        description='Set the plugin file used to compute the meshes tangent space frames.',
+        maxlen= 1024,
+        default= "/Applications/Substance Automation/plugins/tangentspace/libmikktspace.dylib")
+    
+    def execute(self, context) :  
+        #print("fixed item", self.fixed_items)  
+        return {"FINISHED"} 
+
+# <<OLD
 
 ######## sbsbaker option panels
 class SbsBakerAmbientOcclutsonOperator(bpy.types.Operator): 
@@ -1582,477 +2070,218 @@ class PBR_NodeBuilderPanel(bpy.types.Panel):
         row.operator(PBR_BuildeNodes_Operator.bl_idname, text = "build nodes", icon_value=custom_icons["substance_designer"].icon_id)
         
     
-    
-    #sbsbaker_global_options['relative-to-bbox'] = BoolProperty(name="relative-to-bbox", description="Interpret the max distances as a factor of the mesh bounding box.", default=True)
-
-        
-
-class ExportSelectAsFbxOperator(bpy.types.Operator):
-    """ToolTip of UnityWorkflowOperator"""
-    bl_idname = "addongen.exort_selected_as_fbx_operator"
-    bl_label = "Export Selected"
-    bl_options = {'REGISTER'}
 
 
-    #@classmethod
-    #def poll(cls, context):
-    #    return context.object is not None
+##### >>>>>>>>
+class SbsCookerOptions(bpy.types.Operator):
     
-    def execute(self, context):
-       
-        fbxPath = re.sub('\.blend', '_'+bpy.context.selected_objects[0].name+'.fbx',bpy.data.filepath )
-        bpy.ops.export_scene.fbx(filepath = fbxPath, axis_up='Z', use_selection = True)
-        
-        self.report({'INFO'}, "Exported Selected")
-        return {'FINISHED'}
+    #sbscooker [<global_option>...] [<option>...] <inputs>...
     
-    #def invoke(self, context, event):
-    #    wm.modal_handler_add(self)
-    #    return {'RUNNING_MODAL'}  
-    #    return wm.invoke_porps_dialog(self)
-    #def modal(self, context, event):
-    #def draw(self, context):
-
-class UnityWorkflowOperator(bpy.types.Operator):
-    """ToolTip of UnityWorkflowOperator"""
-    bl_idname = "addongen.unity_workflow_operator"
-    bl_label = "Unity Workflow Operator"
-    bl_options = {'REGISTER'}
-
-
-    #@classmethod
-    #def poll(cls, context):
-    #    return context.object is not None
-    
-    def execute(self, context):
-        getObjects()
-        
-        substance = Substance()
-        for mat in substance.materials:
-            print (mat.name)
-            for im in mat.images:
-                print (im.filepath)
-        
-        self.report({'INFO'}, "Unity Workflow")
-        return {'FINISHED'}
-    
-    #def invoke(self, context, event):
-    #    wm.modal_handler_add(self)
-    #    return {'RUNNING_MODAL'}  
-    #    return wm.invoke_porps_dialog(self)
-    #def modal(self, context, event):
-    #def draw(self, context):
-
-class ZBrushWorkflowOperator(bpy.types.Operator):
-    """ToolTip of ZBrushWorkflowOperator"""
-    bl_idname = "addongen.zbrush_workflow_operator"
-    bl_label = "ZBrush Workflow Operator"
-    bl_options = {'REGISTER'}
-
-
-    #@classmethod
-    #def poll(cls, context):
-    #    return context.object is not None
-    
-    def execute(self, context):
-        getTextures()
-        #getMaterials()
-        
-        self.report({'INFO'}, "Zbrush Workflow")
-        return {'FINISHED'}
-    
-    #def invoke(self, context, event):
-    #    wm.modal_handler_add(self)
-    #    return {'RUNNING_MODAL'}  
-    #    return wm.invoke_porps_dialog(self)
-    #def modal(self, context, event):
-    #def draw(self, context):
-    
-class SubstanceWorkflowOperator(bpy.types.Operator):
-    """ToolTip of SubstanceWorkflowOperator"""
-    bl_idname = "addongen.substance_workflow_operator"
-    bl_label = "Substance Workflow Operator"
-    bl_options = {'REGISTER'}
-
-
-    #@classmethod
-    #def poll(cls, context):
-    #    return context.object is not None
-    
-    def execute(self, context):
-        #createSubstance()
-        updateTextureNodes();
-        #print ( json.dumps(getSubstancePainterTextures(), indent=2))
-        self.report({'INFO'}, "Creating Substance")
-        return {'FINISHED'}
-    
-    #def invoke(self, context, event):
-    #    wm.modal_handler_add(self)
-    #    return {'RUNNING_MODAL'}  
-    #    return wm.invoke_porps_dialog(self)
-    #def modal(self, context, event):
-    #def draw(self, context):
-
-class SubstanceWorkflowPanel(bpy.types.Panel):
-    """Docstring of SubstanceWorkflowPanel"""
-    bl_idname = "VIEW3D_PT_substance_workflow"
-    bl_label = "Workflow"
-    
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
-    bl_category = 'Tools'
-    
-    #Panels in ImageEditor are using .poll() instead of bl_context.
-    #@classmethod
-    #def poll(cls, context):
-    #    return context.space_data.show_paint
-    
-    def draw(self, context):
-        layout = self.layout
-        
-        box = layout.box()
-        # row = box.row()
-        # row.operator(SubstanceWorkflowOperator.bl_idname, text = "Create SBS", icon_value=custom_icons["substance_designer"].icon_id)
-        # 
-        # row.operator(ZBrushWorkflowOperator.bl_idname, text = "ZBrush Workflow", icon_value=custom_icons["zbrush"].icon_id)
-        # row.operator(UnityWorkflowOperator.bl_idname, text = "Unity Workflow", icon_value=custom_icons["unity"].icon_id)
-        # row.operator(ExportSelectAsFbxOperator.bl_idname, text = "Export Selected", icon_value=custom_icons["unity"].icon_id)
-        # 
-        
-        scene = context.scene
-        mytool = scene.sbsbaker_InputAndOutput_options
-        
-        ao_opts = scene.sbsbaker_AmbientOcclusion_options
-        
-        
-        
-        #row = box.row()
-        #box.prop(mytool, "workflow_context", text="Context")
-        
-        # box.prop(mytool, "ambient_occlusion", text="ambient_occlusion")
-        # box.prop(mytool, "ambient_occlusion_from_mesh", text="ambient_occlusion_from_mesh")
-        # box.prop(mytool, "bent_normal_from_mesh", text="bent_normal_from_mesh")
-        # box.prop(mytool, "color_from_mesh", text="color_from_mesh")
-        # box.prop(mytool, "curvature", text="curvature")
-        # box.prop(mytool, "curvature_from_mesh", text="curvature_from_mesh")
-        # box.prop(mytool, "height_from_mesh", text="height_from_mesh")
-        # box.prop(mytool, "normal_from_mesh", text="normal_from_mesh")
-        # box.prop(mytool, "normal_world_space", text="normal_world_space")
-        # box.prop(mytool, "opacity_mask_from_mesh", text="opacity_mask_from_mesh")
-        # box.prop(mytool, "position", text="position")
-        # box.prop(mytool, "position_from_mesh", text="position_from_mesh")
-        # box.prop(mytool, "texture_from_mesh", text="texture_from_mesh")
-        # box.prop(mytool, "thickness_from_mesh", text="thickness_from_mesh")
-        # box.prop(mytool, "uv_map", text="uv_map")
-        # box.prop(mytool, "world_space_direction", text="world_space_direction")
-        
-        box.prop(mytool, "input_selection", text="input_selection")
-        box.prop(mytool, "inputs", text="inputs")
-        box.prop(mytool, "name_suffix_high", text="name_suffix_high")
-        box.prop(mytool, "name_suffix_low", text="name_suffix_low")
-        box.prop(mytool, "output_format", text="output_format")
-        box.prop(mytool, "output_format_compression", text="output_format_compression")
-        box.prop(mytool, "output_name", text="output_name")
-        box.prop(mytool, "per_fragment_binormal", text="per_fragment_binormal")
-        box.prop(mytool, "recompute_tangents", text="recompute_tangents")
-        box.prop(mytool, "tangent_space_plugin", text="tangent_space_plugin")
-        
-        
-        box.prop(ao_opts, "apply_diffusion", text="apply_diffusion")
-        box.prop(ao_opts, "details", text="details")
-        box.prop(ao_opts, "dilation_width", text="dilation_width")
-        box.prop(ao_opts, "normal", text="normal")
-        box.prop(ao_opts, "normal_format", text="normal_format")
-        box.prop(ao_opts, "normal_invert", text="normal_invert")
-        box.prop(ao_opts, "normal_world_space", text="normal_world_space")
-        box.prop(ao_opts, "output_size", text="output_size")
-        box.prop(ao_opts, "quality", text="quality")
-        box.prop(ao_opts, "spread", text="spread")
-        box.prop(ao_opts, "udim", text="udim")
-        box.prop(ao_opts, "use_neighbors", text="use_neighbors")
-
-
-    
-    
-    
-    
-    
-    
-    
-
-
-class SubstanceWorkflowMenu(bpy.types.Menu):
-    bl_idname = "VIEW3D_MT_substance_workflow"
-    bl_label = "Substance Workflow Menu"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator(SubstanceWorkflowOperator.bl_idname)
-        layout.separator()
-        layout.menu("VIEW3D_MT_transform")
-        layout.operator_menu_enum("object.select_by_type", "type", text="Select All by Type...")
-
-
-
-############
-
-class sbsbaker_InputAndOutputOptions(bpy.types.PropertyGroup):
-    input_selection = StringProperty(name="input-selection", description='''Select a submesh/subgroup of a mesh.
-Mesh subpart selection can be specified using this syntax for <arg>: <nodeName>@<materialId> where the additional
-@<materialId> is optional. If no material id is specified, all the ids will be used for the process.
-<nodeName> can either be the name of a mesh part or of a transform group. In this case, all the mesh parts parented
-directly or inderectly to this node will be used for the process''', maxlen= 1024, default= "")
-    
-    inputs = StringProperty(name="inputs", description='''Mesh files to process.
-This option is implicit, so you can just provide a list of files at the end of your arguments, they will be interpreted
-as inputs.''', maxlen= 1024, default= "")
-    
-    name_suffix_high = StringProperty(name="name-suffix-high ", description="High Poly name suffix.", maxlen= 1024, default= "_high")
-    name_suffix_low = StringProperty(name="name-suffix-low ", description="Low Poly name suffix.", maxlen= 1024, default= "_low")
-    
-    output_format = EnumProperty(items = [
-        ('bmp', 'bmp', 'bmp'),
-        ('dds', 'dds', 'dds'),
-        ('bmp', 'bmp', 'bmp'),
-        ('ico', 'ico', 'ico'),
-        ('jpg', 'jpg', 'jpg'),
-        ('jif', 'jif', 'jif'),
-        ('jpeg', 'jpeg', 'jpeg'),
-        ('jpe', 'jpe', 'jpe'),
-        ('png', 'png', 'png'),
-        ('tga', 'tga', 'tga'),
-        ('targa', 'targa', 'targa'),
-        ('tif', 'tif', 'tif'),
-        ('tiff', 'tiff', 'tiff'),
-        ('wap', 'wap', 'wap'),
-        ('wbmp', 'wbmp', 'wbmp'),
-        ('wbm', 'wbm', 'wbm'),
-        ('hdr', 'hdr', 'hdr'),
-        ('exr', 'exr', 'exr'),
-        ('jp2', 'jp2', 'jp2'),
-        ('webp', 'webp', 'webp'),
-        ('jxr', 'jxr', 'jxr'),
-        ('wdp', 'wdp', 'wdp'),
-        ('hdp', 'hdp', 'hdp'),
-        ('psd', 'psd', 'psd')],
-                                 name="output-format",
-                                 description="Format to use for output image file.",
-                                 default="png")
-    
-    output_format_compression  = EnumProperty(items = [
-        ('raw', 'raw', 'raw'),
-        ('dxt1', 'dxt1', 'dxt1'),
-        ('dxt2', 'dxt2', 'dxt2'),
-        ('dxt3', 'dxt3', 'dxt3'),
-        ('dxt4', 'dxt4', 'dxt4'),
-        ('dxt5', 'dxt5', 'dxt5'),
-        ('ati1', 'ati1', 'ati1'),
-        ('ati2', 'ati2', 'ati2')],
-                                 name="output-format-compression",
-                                 description="Dds compression to use for output image.",
-                                 default="raw")
-
-    output_name = StringProperty(name="output-name ", description='''Set the output name of the generated files, without the extension."The name is "{inputName}_{bakerName}" by default.
-You can use the following patterns that will be replaced by the program when saving the result of the process:
-- {inputName}. Replaced by the input name.
-- {bakerName}. Replaced by the baker name.''', maxlen= 1024, default= "{inputName}_{bakerName}")
-
-
-    per_fragment_binormal = BoolProperty(name="per-fragment-binormal", description=''' Controls whether the binormal of the tangent frame has to be computed in the fragment shader (true) or in the vertex shader (false).
-- Set by default to 'false' for unitytspace tangent space plugin.
-- Set by default to 'false' for mikktspace tangent space plugin.
-- Set by default to 'true' otherwise.''', default=False)
-    
-    recompute_tangents = BoolProperty(
-        name="recompute-tangents",
-        description="Force to recompute tangents; do not load tangents from the mesh if available.",
-        default=False)
-    
-    tangent_space_plugin = StringProperty(
-        name="tangent-space-plugin",
-        description='Set the plugin file used to compute the meshes tangent space frames.',
-        maxlen= 1024,
-        default= "/Applications/Substance Automation/plugins/tangentspace/libmikktspace.dylib")
-
-class sbsbaker_AmbientOcclusionOptions(bpy.types.PropertyGroup):
-    apply_diffusion = BoolProperty(name="apply-diffusion", description="Whether to use diffusion as a post-process after dilation, or not..", default=True)
-    details = FloatProperty(name="details", description="A lower value will be more precise but will easilly produce artefacts.", default=0.6)
-    dilation_width = IntProperty(name="dilation-width", description="Width of the dilation post-process (in pixels) applied before diffusion.", default=1)
-    normal = StringProperty(name="normal", description="External normal map from file", maxlen= 1024, default= "")
-    
-    normal_format =  EnumProperty(items = [('0', 'OpenGL', 'enum prop 1'), ('1', 'DirectX', 'enum prop 2') ],
-                                name="normal-format",
-                                description="Invert green component in normal map depending on selected format.",
-                                default="1")
-    
-    normal_invert = BoolProperty(name="normal-invert", description="Invert the normals.", default=False)
-    normal_world_space = BoolProperty(name="normal-world-space", description="Tell if the normal map is in world space.", default=False)
-
-    output_size = EnumProperty(items = [
-        ('0', '512 x 512', 'enum prop 1'),
-        ('1', '1024 x 1024', 'enum prop 2'),
-        ('2', '2048 x 2048', 'enum prop 2'),
-        ('3', '4096 x 4096', 'enum prop 2')],
-                                name="output-size", description="output size of the map", default="1")
-    
-    quality = EnumProperty(items = [
-        ('0', 'Low', 'enum prop 1'),
-        ('1', 'Medium', 'enum prop 2'),
-        ('2', 'High', 'enum prop 2'),
-        ('3', 'Very High', 'enum prop 2')],
-                                name="quality", description="Quality of the ambient occlusion. A higher quality is slower.", default="1")
-    
-
-    spread = FloatProperty(name="spread", description="Spread of the ambient occlusion.", default=0.01)
-
-    udim = StringProperty(name="udim", description="ID of the udim tile to bake. Only accepts MARI notation for now.", maxlen= 1024, default= "")
-    
-    use_neighbors = BoolProperty(name="use-neighbors", description="Use unselected mesh parts to compute the ambient occlusion.", default=False)
-
-
-    uv_set = EnumProperty(items = [
-        ('0', 'UV 0', 'enum prop 1'),
-        ('1', 'UV 1', 'enum prop 2'),
-        ('2', 'UV 2', 'enum prop 2'),
-        ('3', 'UV 3', 'enum prop 2'),
-        ('4', 'UV 4', 'enum prop 2'),
-        ('5', 'UV 5', 'enum prop 2'),
-        ('6', 'UV 6', 'enum prop 2'),
-        ('7', 'UV 7', 'enum prop 2')
-        ], name="uv-set", description="Select UV set used to bake meshes information.", default="1")
-
-
-
-
-#########
-class SubstanceWorkflowProps(bpy.types.PropertyGroup):
-    my_bool =     BoolProperty(name="", description="", default=False)
-    
-    
-    bakeNormalFromMesh =     BoolProperty(name="", description="", default=False)
-    bakeAOFromMesh =     BoolProperty(name="", description="", default=False)
-    
-    
-    ambient_occlusion = BoolProperty(name="", description="", default=False)
-    ambient_occlusion_from_mesh = BoolProperty(name="", description="", default=False)
-    bent_normal_from_mesh = BoolProperty(name="", description="", default=False)
-    color_from_mesh = BoolProperty(name="", description="", default=False)
-    curvature = BoolProperty(name="", description="", default=False)
-    curvature_from_mesh = BoolProperty(name="", description="", default=False)
-    height_from_mesh = BoolProperty(name="", description="", default=False)
-    normal_from_mesh = BoolProperty(name="", description="", default=False)
-    normal_world_space = BoolProperty(name="", description="", default=False)
-    opacity_mask_from_mesh = BoolProperty(name="", description="", default=False)
-    position = BoolProperty(name="", description="", default=False)
-    position_from_mesh = BoolProperty(name="", description="", default=False)
-    texture_from_mesh = BoolProperty(name="", description="", default=False)
-    thickness_from_mesh = BoolProperty(name="", description="", default=False)
-    uv_map = BoolProperty(name="", description="", default=False)
-    world_space_direction = BoolProperty(name="", description="", default=False)
-    
-    
-    my_boolVec =  BoolVectorProperty(name="", description="", default=(False, False, False))
-    my_float =    FloatProperty(name="", description="", default=0.0)
-    my_floatVec = FloatVectorProperty(name="", description="", default=(0.0, 0.0, 0.0)) 
-    my_int =      IntProperty(name="", description="", default=0)  
-    my_intVec =   IntVectorProperty(name="", description="", default=(0, 0, 0))
-    my_string =   StringProperty(name="String Value", description="", default="", maxlen=0)
-    workflow_context =  EnumProperty(items = [('ENUM1', 'Model', 'enum prop 1'),
-        ('ENUM2', 'Surface', 'enum prop 2'),
-        ('ENUM3', 'Animation', 'enum prop 2')
-        ],
-                                    name="Workflow Context",
-                                    description="",
-                                    default="ENUM1")
-
-
-class SbsBakerIOOperator(bpy.types.Operator):
-    bl_idname = "sbsbaker.io"  
-    bl_label = "sbsbaker io"  
+    bl_idname = "sbscooker.properties"
+    bl_label = "sbscooker options"  
     bl_options = {"REGISTER", "UNDO"}
     
-    input_selection = bpy.props.StringProperty(name="input-selection", description='''Select a submesh/subgroup of a mesh.
-Mesh subpart selection can be specified using this syntax for <arg>: <nodeName>@<materialId> where the additional
-@<materialId> is optional. If no material id is specified, all the ids will be used for the process.
-<nodeName> can either be the name of a mesh part or of a transform group. In this case, all the mesh parts parented
-directly or inderectly to this node will be used for the process''', maxlen= 1024, default= "")
+    ### I/O options
+    alias = StringProperty(
+        name="alias",
+        description='''Add an alias definition.
+            syntax of <arg>: '<alias>://<path>'
+            Every occurence of <arg> in every url of every input file with be replaced
+            with <path> before cooking.''',
+        maxlen= 1024, default= "")
     
-    inputs = bpy.props.StringProperty(name="inputs", description='''Mesh files to process.
-This option is implicit, so you can just provide a list of files at the end of your arguments, they will be interpreted
-as inputs.''', maxlen= 1024, default= "")
+    enable_icons = BoolProperty(
+        name='enable-icons',
+        description = 'Include graph icons files in the SBSAR if they exist.',
+        default = False)
     
-    name_suffix_high = bpy.props.StringProperty(name="name-suffix-high ", description="High Poly name suffix.", maxlen= 1024, default= "_high")
-    name_suffix_low = bpy.props.StringProperty(name="name-suffix-low ", description="Low Poly name suffix.", maxlen= 1024, default= "_low")
+    includes = StringProperty(
+        name="includes",
+        description='''Add a path to the list of folders of default packages. The Substance
+            authoring tool default packages folder will be automatically appended to
+            this list.''',
+        maxlen= 1024, default= "")
     
-    output_format = bpy.props.EnumProperty(items = [
-        ('bmp', 'bmp', 'bmp'),
-        ('dds', 'dds', 'dds'),
-        ('bmp', 'bmp', 'bmp'),
-        ('ico', 'ico', 'ico'),
-        ('jpg', 'jpg', 'jpg'),
-        ('jif', 'jif', 'jif'),
-        ('jpeg', 'jpeg', 'jpeg'),
-        ('jpe', 'jpe', 'jpe'),
-        ('png', 'png', 'png'),
-        ('tga', 'tga', 'tga'),
-        ('targa', 'targa', 'targa'),
-        ('tif', 'tif', 'tif'),
-        ('tiff', 'tiff', 'tiff'),
-        ('wap', 'wap', 'wap'),
-        ('wbmp', 'wbmp', 'wbmp'),
-        ('wbm', 'wbm', 'wbm'),
-        ('hdr', 'hdr', 'hdr'),
-        ('exr', 'exr', 'exr'),
-        ('jp2', 'jp2', 'jp2'),
-        ('webp', 'webp', 'webp'),
-        ('jxr', 'jxr', 'jxr'),
-        ('wdp', 'wdp', 'wdp'),
-        ('hdp', 'hdp', 'hdp'),
-        ('psd', 'psd', 'psd')],
-                                 name="output-format",
-                                 description="Format to use for output image file.",
-                                 default="png")
-    
-    output_format_compression  = bpy.props.EnumProperty(items = [
-        ('raw', 'raw', 'raw'),
-        ('dxt1', 'dxt1', 'dxt1'),
-        ('dxt2', 'dxt2', 'dxt2'),
-        ('dxt3', 'dxt3', 'dxt3'),
-        ('dxt4', 'dxt4', 'dxt4'),
-        ('dxt5', 'dxt5', 'dxt5'),
-        ('ati1', 'ati1', 'ati1'),
-        ('ati2', 'ati2', 'ati2')],
-                                 name="output-format-compression",
-                                 description="Dds compression to use for output image.",
-                                 default="raw")
-
-    output_name = bpy.props.StringProperty(name="output-name ", description='''Set the output name of the generated files, without the extension."The name is "{inputName}_{bakerName}" by default.
-You can use the following patterns that will be replaced by the program when saving the result of the process:
-- {inputName}. Replaced by the input name.
-- {bakerName}. Replaced by the baker name.''', maxlen= 1024, default= "{inputName}_{bakerName}")
+    inputs = StringProperty(
+        name="inputs",
+        description='''Paths to the substance files to cook (in the .sbs file format).''',
+        maxlen= 1024, default= "")
 
 
-    per_fragment_binormal = bpy.props.BoolProperty(name="per-fragment-binormal", description=''' Controls whether the binormal of the tangent frame has to be computed in the fragment shader (true) or in the vertex shader (false).
-- Set by default to 'false' for unitytspace tangent space plugin.
-- Set by default to 'false' for mikktspace tangent space plugin.
-- Set by default to 'true' otherwise.''', default=False)
+    merge = BoolProperty(
+        name='merge',
+        description = 'Merge all the results in one file',
+        default = False)
     
-    recompute_tangents = bpy.props.BoolProperty(
-        name="recompute-tangents",
-        description="Force to recompute tangents; do not load tangents from the mesh if available.",
+    no_archive = BoolProperty(
+        name='no-archive',
+        description = 'Generate non packaged SBSASM and XML.',
+        default = False )
+    
+    output_name = StringProperty(
+        name="output-name",
+        description='''Set the output name of the generated files, without the extension."The
+            name is "{inputName}" by default.
+            You can use the following patterns that will be replaced by the program
+            when saving the result of the process:
+              {inputName}  Replaced by the name of the first processed sbs file.
+            [default: "{inputName}"]''',
+        maxlen= 1024, default= "")
+
+    output_path = StringProperty(
+        name="output-path",
+        description='''Set the output path for the generated files.
+            By default the path is empty, i.e. the files will be saved in the current
+            directory. You can use the following patterns that will be replaced by the
+            program when saving the result of the process:
+              {inputPath}  Replaced by the path of the first processed sbs file.''',
+        maxlen= 1024, default= "")
+
+    # Cooking options
+    
+    compression_mode = EnumProperty(items = [
+        ('0', 'auto', 'auto'),
+        ('1', 'best', 'best'),
+        ('2', 'none', 'none')],
+                                name="compression-mode",
+                                description="Set the compression mode",
+                                default="0")
+    
+    expose_output_size = BoolProperty(
+                                name="expose-output-size",
+                                description="Expose output size ?",
+                                default=True)
+    
+    expose_pixel_size= BoolProperty(
+                                name="expose-pixel-size",
+                                description="Expose pixel size ?",
+                                default=False)
+    
+    expose_random_seed = BoolProperty(
+                                name="expose-random-seed",
+                                description="Expose random seed ?",
+                                default=True)
+    
+    no_optimization = BoolProperty(
+                                name="no-optimization",
+                                description='''Disable optimization.
+            Check advanced parameters for finer tweaks with optimization.''',
+                                default=False)
+    
+    size_imit = IntProperty(
+                                name="size-limit",
+                                description='''Maximum width and height of all compositing nodes,given as the exponent of
+            a power in base 2.In other words, you must provide the logarithm in base 2
+            of the actual width/height.
+            For example '--size-limit 10' means nodes have a size limit of 1024x1024
+            pixels.
+            [Default value: Engine specific]''',
+                                default=10)
+
+
+    # Linking options
+    
+    link = StringProperty(
+        name="link",
+        description='''Call linker to generate .sbsbin file for an engine identified with the
+            <engine_id> or <engine_short_name> parameter.''',
+        maxlen= 1024, default= "")
+   
+    link_output_name = StringProperty(
+        name="link-output-name",
+        description='''Set the output name of the generated linked files, without the
+            extension.The name is "{outputName}_{engineName}" by default.
+            You can use the following patterns that will be replaced by the program
+            when saving the result of the process:
+            - {inputName}  Replaced by the name of the processed sbs.
+            - {engineName}  Replaced by the name of the engine used to link the sbs.
+            - {outputName}  Replaced by the output name specified by the --output-name
+            command.''',
+        maxlen= 1024, default= "{outputName}_{engineName}")
+    
+    link_output_path = StringProperty(
+        name="link-output-path",
+        description='''Set the output path of the generated linked files.The path is
+            "{outputPath}" by default.
+            program when saving the result of the process:
+            - {inputPath}  Replaced by the path of the processed sbs.
+            - {engineName}  Replaced by the name of the engine used to link the sbs.
+            - {outputPath}  Replaced by the output path specified by the --output-path
+            command''',
+        maxlen= 1024, default= "{outputPath}")
+    
+
+    # Watermarking options
+    post_filter = StringProperty(
+        name="post-filter",
+        description='''Post-filter substance file to apply (in the .sbs file format).''',
+        maxlen= 1024, default= "")
+   
+    # Cooking optimization options
+    crc = BoolProperty(
+        name="crc",
+        description='''Reduce cooking time.''',
         default=False)
     
-    tangent_space_plugin = bpy.props.StringProperty(
-        name="tangent-space-plugin",
-        description='Set the plugin file used to compute the meshes tangent space frames.',
-        maxlen= 1024,
-        default= "/Applications/Substance Automation/plugins/tangentspace/libmikktspace.dylib")
+    full = BoolProperty(
+        name="full",
+        description='''Full optimizations options. Best performance and memory footprint, slower
+            cooking process.''',
+        default=True)
+    
+    merge_data = BoolProperty(
+        name="merge-data",
+        description='''Reduce binary size.''',
+        default=False)
+    
+    merge_graph = BoolProperty(
+        name="merge-graph",
+        description='''Best performance.''',
+        default=False)
+    
+    reordering = BoolProperty(
+        name="reorderingmerge-graph",
+        description='''Reduce memory footprint.''',
+        default=False)
+    
+    # Other options
+    internal = BoolProperty(
+        name="internal",
+        description='''<uint>''',
+        default=False)
     
     def execute(self, context) :  
         #print("fixed item", self.fixed_items)  
-        return {"FINISHED"} 
+        return {"FINISHED"}
 
+    
+    
+class SbsCookerPanel(bpy.types.Panel):
+    """Creates a Panel in the Object properties window"""
+    bl_label = "sbscooker"
+    bl_idname = "OBJECT_sbscooker"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "material"
+    
+    
+    
+    #bl_space_type = 'VIEW_3D'
+    #bl_region_type = 'TOOLS'
+    #bl_category = 'Tools'
 
+    def draw(self, context):
+        layout = self.layout
+        obj = context.object
+        scene = context.scene
+        #mytool = scene.sbscooker.options
+        
+        box = layout.box()
+
+        row = box.row()
+        
+        row.operator(SbsCookerOptions.bl_idname, text = "sbscooker options", icon_value=custom_icons["substance_designer"].icon_id)
+     
 
 
 def add_to_menu(self, context) :
@@ -2103,6 +2332,11 @@ def register():
     bpy.utils.register_class(SbsBakerUvMapOperator)
     bpy.utils.register_class(SbsBakerWorldSpaceDirectionOperator)
     
+    
+    bpy.utils.register_class(SbsCookerOptions)
+    bpy.utils.register_class(SbsCookerPanel)
+    
+
     
     #bpy.types.VIEW3D_MT_object.append(add_to_menu)
 
