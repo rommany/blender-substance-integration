@@ -10,6 +10,7 @@ links = material.node_tree.links
 for node in nodes:
     nodes.remove(node)
 
+
 # setup shader
 shader = nodes.new(type="ShaderNodeBsdfPrincipled")
 output = nodes.new(type="ShaderNodeOutputMaterial")
