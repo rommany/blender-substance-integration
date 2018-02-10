@@ -2284,6 +2284,188 @@ class SbsCookerPanel(bpy.types.Panel):
      
 
 
+'''Subcommand info
+Return description of a substance archive file.
+'''
+class SbsRenderInfoOptions(bpy.types.Operator):
+    
+    
+    #sbsrender [<global_options>...] info [<options>...]
+    #sbsrender [<global_options>...] render [<options>...]
+
+    
+    bl_idname = "sbsrender.info_properties"
+    bl_label = "sbsrender info options"  
+    bl_options = {"REGISTER", "UNDO"}
+
+    ### I/O options
+    my_input = StringProperty(
+        name="input",
+        description='''Substance Archive File described. This option is implicit, so you can just provide a filepath at the end of your arguments, they will be interpreted as input.''',
+        maxlen= 1024, default= "")
+
+
+    
+    def execute(self, context) :  
+        #print("fixed item", self.fixed_items)  
+        return {"FINISHED"}
+    
+'''Subcommand render
+Render outputs of a substance archive file to image files.
+'''
+class SbsRenderRenderOptions(bpy.types.Operator):
+    
+    
+    #sbsrender [<global_options>...] info [<options>...]
+    #sbsrender [<global_options>...] render [<options>...]
+
+    global sbsbaker_global_options
+    
+    bl_idname = "sbsrender.render_properties"
+    bl_label = "sbsrender render options"  
+    bl_options = {"REGISTER", "UNDO"}
+
+    ### I/O options
+    input_graph = StringProperty( #   --input-graph <graph_url> 
+        name="input-graph",
+        description='''Select specific graph to be rendered. If no graph are selected, all graphs are rendered.''',
+        maxlen= 1024, default= "")
+
+
+    input_graph_output = StringProperty( #   --input-graph-output <name> 
+        name="input-graph-output",
+        description = 'Select output to be rendered. If no output are selected, all outputs are rendered.',
+        maxlen= 1024, default= "")
+    
+    inputs = StringProperty( #   --inputs <path> 
+        name="inputs",
+        description = 'List of substance archive file to render.',
+        maxlen= 1024, default= "")
+    
+    output_bit_depth = StringProperty( #   --output-bit-depth <name> 
+        name="output-bit-depth",
+        description = '''Change the bit depth of the result image. The computation is still done in the bit depth the cooked graph uses. This option only affects the bit depth of the output image. <name> can be set to "8" (or "int8"), "16" (or "int16"),"16f" (or "float16") or "32f" (or "float32"). ''',
+        maxlen= 1024, default= "")
+    
+    output_format = sbsbaker_global_options['output-format']
+    output_format_compression = sbsbaker_global_options['output-format-compression']
+    
+    output_name = StringProperty( #  --output-name <name> [default: "{inputName}_{inputGraphUrl}_{outputNodeName}"] 
+        name="output-name",
+        description = '''You can use the following patterns that will be replaced by the program when saving the result of the process: - {inputName} replaced by the archive filename. - {inputGraphUrl} replaced by the graph url. - {outputNodeName} replaced by the output name. ''',
+        maxlen= 1024, default= "{inputName}_{inputGraphUrl}_{outputNodeName}")
+    
+    output_path = StringProperty( #  --output-path <path>
+        name="output-path",
+        description = 'Output file path. Default path is empty. You can use the following patterns that will be replaced by the program when saving the result of the process: -{inputPath} replaced by the input filepath.',
+        maxlen= 1024, default= "")
+    
+    png_format_compression =  EnumProperty(items = [ #  --png-format-compression <format> [default: "default"] 
+    ('0', 'default', 'default'),
+    ('1', 'best_speed', 'best_speed'),
+    ('2', 'best_compression', 'best_compression'),
+    ('2', 'none', 'none')],
+                                        name="png-format-compression",
+                                        description="PNG compression to use for output image",
+                                        default="0")
+    
+    # Specific options
+    set_entry = StringProperty( #   --set-entry <arg> 
+        name="set-entry",
+        description = 'Set image data to an image input. Format of <arg>: <input_identifier>@<filepath_of_image>.',
+        maxlen= 1024, default= "")
+    
+    set_value = StringProperty( #   --set-value <arg> 
+        name="set-value",
+        description = 'Set value to a numerical input parameter. Format of <arg> : <input_identifier>@<value>. ',
+        maxlen= 1024, default= "")
+    
+    use_preset = StringProperty( #   --use-preset <name> 
+        name="use-preset",
+        description = 'Use a specific preset to set values. <name> is the name of preset that must be included in the input sbsar file.',
+        maxlen= 1024, default= "")
+    
+    
+    # Runtime options
+    engine = StringProperty( #   --engine <arg> 
+        name="engine",
+        description = 'Switch to specific engine implementation. format of <arg> : <dynamic_library_filepath> or <engine_version_basename_substring> e.g.: ogl3, d3d10pc, ... ',
+        maxlen= 1024, default= "")
+    
+    engineMem = StringProperty( #  --engine <uint>
+        name="engine-mem",
+        description = 'Set the maximum amount of memory that the Substance Engine is allowed to use. In MB (default 1000 MB)',
+        maxlen= 1024, default= "")
+    
+    
+    
+    def execute(self, context) :  
+        #print("fixed item", self.fixed_items)  
+        return {"FINISHED"}
+
+
+class SbsRenderPanel(bpy.types.Panel):
+    """Creates a Panel in the Object properties window"""
+    bl_label = "sbsrender"
+    bl_idname = "OBJECT_sbsrender"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "material"
+    
+    
+    
+    #bl_space_type = 'VIEW_3D'
+    #bl_region_type = 'TOOLS'
+    #bl_category = 'Tools'
+
+    def draw(self, context):
+        layout = self.layout
+        obj = context.object
+        scene = context.scene
+        #mytool = scene.sbscooker.options
+        
+        box = layout.box()
+
+        row = box.row()
+        row.operator(
+            SbsRenderInfoOptions.bl_idname,
+            text = "info",
+            icon_value=custom_icons["substance_designer"].icon_id)
+        
+        
+        row.operator(SbsRenderRenderOptions.bl_idname, text = "render", icon_value=custom_icons["substance_designer"].icon_id)
+   
+   
+'''sbsmutator
+Modifies and specializes .sbs files.
+
+Typical examples of operations would be to connect images to inputs, instantiate a graph and expose inputs, etc.
+Use the Pysbs - Python API in more advanced scenarios such as generating a graph from scratch.
+'''
+class SbsMutatorOptions(bpy.types.Operator):
+    
+    
+    # Usage
+    # sbsmutator [<global_options>...] edit [<options>...]
+    # sbsmutator [<global_options>...] export [<options>...]
+    # sbsmutator [<global_options>...] graph-parameters-editor [<options>...]
+    # sbsmutator [<global_options>...] info [<options>...]
+    # sbsmutator [<global_options>...] instantiate [<options>...]
+    # sbsmutator [<global_options>...] specialization [<options>...]
+    # sbsmutator [<global_options>...] update [<options>...]
+
+
+    global sbsbaker_global_options
+    
+    bl_idname = "sbsmutator.properties"
+    bl_label = "sbsmutator optiions"
+    
+    
+    def execute(self, context) :  
+        #print("fixed item", self.fixed_items)  
+        return {"FINISHED"}
+
+
 def add_to_menu(self, context) :
     self.layout.operator("mesh.dropdownexample", icon = "PLUGIN")
 
@@ -2335,6 +2517,14 @@ def register():
     
     bpy.utils.register_class(SbsCookerOptions)
     bpy.utils.register_class(SbsCookerPanel)
+    
+    bpy.utils.register_class(SbsRenderInfoOptions)
+    bpy.utils.register_class(SbsRenderRenderOptions)
+    bpy.utils.register_class(SbsRenderPanel)
+    
+    
+
+
     
 
     
